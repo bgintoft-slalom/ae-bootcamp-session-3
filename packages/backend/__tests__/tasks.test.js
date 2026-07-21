@@ -57,3 +57,48 @@ describe('Tasks API', () => {
     expect(res.status).toBe(204);
   });
 });
+
+describe('Task priority', () => {
+  let taskId;
+
+  it('should default priority to P3 when not specified on create', async () => {
+    const res = await request(app)
+      .post('/api/tasks')
+      .send({ title: 'No priority task' });
+    expect(res.status).toBe(201);
+    expect(res.body.priority).toBe('P3');
+    taskId = res.body.id;
+  });
+
+  it('should create a task with an explicit valid priority', async () => {
+    const res = await request(app)
+      .post('/api/tasks')
+      .send({ title: 'High priority task', priority: 'P1' });
+    expect(res.status).toBe(201);
+    expect(res.body.priority).toBe('P1');
+  });
+
+  it('should reject an invalid priority on create', async () => {
+    const res = await request(app)
+      .post('/api/tasks')
+      .send({ title: 'Bad priority task', priority: 'P9' });
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('error');
+  });
+
+  it('should update a task priority via PATCH', async () => {
+    const res = await request(app)
+      .patch(`/api/tasks/${taskId}`)
+      .send({ priority: 'P2' });
+    expect(res.status).toBe(200);
+    expect(res.body.priority).toBe('P2');
+  });
+
+  it('should reject an invalid priority via PATCH', async () => {
+    const res = await request(app)
+      .patch(`/api/tasks/${taskId}`)
+      .send({ priority: 'invalid' });
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('error');
+  });
+});

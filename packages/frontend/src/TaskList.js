@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
-  List, ListItem, ListItemText, IconButton, Checkbox, Typography, Box, CircularProgress, Paper, Chip
+  List, ListItem, ListItemText, IconButton, Checkbox, Typography, Box, CircularProgress, Paper, Chip, Button
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import EventIcon from '@mui/icons-material/Event';
+
+const PRIORITY_OPTIONS = ['P1', 'P2', 'P3'];
+const PRIORITY_UNSELECTED_COLOR = '#7A7A7A';
+const PRIORITY_SELECTED_COLOR = '#07F2E6';
 
 function TaskList({ onEdit }) {
   const [tasks, setTasks] = useState([]);
@@ -61,6 +65,19 @@ function TaskList({ onEdit }) {
       fetchTasks();
     } catch (err) {
       setError('Failed to delete task');
+    }
+  };
+
+  const handleSetPriority = async (task, priority) => {
+    try {
+      await fetch(`/api/tasks/${task.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ priority })
+      });
+      fetchTasks();
+    } catch (err) {
+      setError('Failed to update task priority');
     }
   };
 
@@ -203,6 +220,44 @@ function TaskList({ onEdit }) {
                 gap: 1
               }}
             >
+              <Box
+                role="radiogroup"
+                aria-label="Task priority"
+                sx={{ display: 'flex', gap: 0.5 }}
+              >
+                {PRIORITY_OPTIONS.map((priorityOption) => {
+                  const isSelected = task.priority === priorityOption;
+                  return (
+                    <Button
+                      key={priorityOption}
+                      role="radio"
+                      aria-checked={isSelected}
+                      aria-label={`Set priority ${priorityOption}`}
+                      onClick={() => handleSetPriority(task, priorityOption)}
+                      variant="contained"
+                      disableElevation
+                      size="small"
+                      sx={{
+                        minWidth: 30,
+                        height: 22,
+                        px: 0.5,
+                        py: 0,
+                        fontSize: '0.65rem',
+                        fontWeight: 700,
+                        lineHeight: 1,
+                        backgroundColor: isSelected ? PRIORITY_SELECTED_COLOR : PRIORITY_UNSELECTED_COLOR,
+                        color: '#fff',
+                        '&:hover': {
+                          backgroundColor: isSelected ? PRIORITY_SELECTED_COLOR : PRIORITY_UNSELECTED_COLOR,
+                          opacity: 0.85
+                        }
+                      }}
+                    >
+                      {priorityOption}
+                    </Button>
+                  );
+                })}
+              </Box>
               {task.due_date && (
                 <Chip
                   icon={<EventIcon sx={{ fontSize: 14 }} />}
